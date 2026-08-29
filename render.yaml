@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: all-in-one-discord-ai-bot
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    maxShutdownDelaySeconds: 30
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 24.14.1
+      - key: PORT
+        value: 10000
+      - key: DATABASE_PATH
+        value: ./data/bot.sqlite
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: CLIENT_ID
+        sync: false
+      - key: BOT_OWNER_ID
+        sync: false
+      - key: AI_PROVIDER
+        value: none
+      - key: AI_API_KEY
+        sync: false
+      - key: TTS_PROVIDER
+        value: edge
+      - key: TTS_API_KEY
+        sync: false
+      - key: TTS_DEFAULT_VOICE
+        value: en-US-AndrewMultilingualNeural
+      - key: DASHBOARD_ENABLED
+        value: true
