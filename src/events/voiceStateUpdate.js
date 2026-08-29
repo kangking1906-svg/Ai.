@@ -1,0 +1,1 @@
+const {Events}=require('discord.js');const {logGuild}=require('../services/logging');module.exports={name:Events.VoiceStateUpdate,execute:async(o,n)=>{if(o.channelId!==n.channelId)await logGuild(n.guild,'Voice Update',`${n.member?.user.tag||'User'} voice state changed.`);}};

@@ -1,0 +1,1 @@
+const {Events}=require('discord.js');const {logGuild}=require('../services/logging');module.exports={name:Events.MessageDelete,execute:async(m)=>{if(m.guild)await logGuild(m.guild,'Message Deleted',`Deleted in <#${m.channelId}>${m.author?` by ${m.author.tag}`:''}.`);}};

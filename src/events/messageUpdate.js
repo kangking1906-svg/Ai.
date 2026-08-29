@@ -1,0 +1,1 @@
+const {Events}=require('discord.js');const {logGuild}=require('../services/logging');module.exports={name:Events.MessageUpdate,execute:async(o,n)=>{if(n.guild&&o.content!==n.content)await logGuild(n.guild,'Message Edited',`Edited in <#${n.channelId}>.`);}};

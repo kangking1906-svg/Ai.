@@ -1,0 +1,1 @@
+const {Events,ActivityType}=require('discord.js');const config=require('../config');const {logger}=require('../utils/logger');module.exports={name:Events.ClientReady,once:true,execute(c){c.user.setPresence({activities:[{name:config.statusText,type:ActivityType.Watching}],status:'online'});logger.info(`Logged in as ${c.user.tag}`);}};
