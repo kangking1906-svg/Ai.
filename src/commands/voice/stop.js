@@ -1,0 +1,1 @@
+const {SlashCommandBuilder}=require('discord.js');const v=require('../../services/voice');module.exports={data:new SlashCommandBuilder().setName('stop').setDescription('Stop voice speech'),async execute(i){return i.reply(v.stop(i.guildId)?'⏹️ Stopped.':'ℹ️ Nothing playing.');}};

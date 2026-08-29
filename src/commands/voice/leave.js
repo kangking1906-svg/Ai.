@@ -1,0 +1,1 @@
+const {SlashCommandBuilder}=require('discord.js');const v=require('../../services/voice');module.exports={data:new SlashCommandBuilder().setName('leave').setDescription('Leave voice'),async execute(i){return i.reply(v.leave(i.guildId)?'✅ Left voice.':'ℹ️ Not in voice.');}};

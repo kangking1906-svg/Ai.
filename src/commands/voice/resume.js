@@ -1,0 +1,1 @@
+const {SlashCommandBuilder}=require('discord.js');const v=require('../../services/voice');module.exports={data:new SlashCommandBuilder().setName('resume').setDescription('Resume voice playback'),async execute(i){const s=v.getSession(i.guildId);if(!s)return i.reply({content:'Not in voice.',ephemeral:true});s.player.unpause();return i.reply('▶️ Resumed.');}};

@@ -1,0 +1,1 @@
+const {SlashCommandBuilder}=require('discord.js');const v=require('../../services/voice');module.exports={data:new SlashCommandBuilder().setName('pause').setDescription('Pause voice playback'),async execute(i){const s=v.getSession(i.guildId);if(!s)return i.reply({content:'Not in voice.',ephemeral:true});s.player.pause(true);return i.reply('⏸️ Paused.');}};
