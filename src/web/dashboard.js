@@ -1,6 +1,6 @@
 const os = require('os');
 const config = require('../config');
-const { logger } = require('./logger');
+const { logger } = require('../utils/logger');
 
 function createDashboard(app, client) {
   app.get('/dashboard', (req, res) => {
@@ -15,7 +15,7 @@ function createDashboard(app, client) {
           id: client.user.id,
           tag: client.user.tag,
           uptime: process.uptime(),
-          version: require('../package.json').version
+          version: require('../../package.json').version
         },
         discord: {
           guilds: client.guilds.cache.size,
