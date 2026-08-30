@@ -1,7 +1,7 @@
 {
   "name": "all-in-one-discord-ai-bot",
-  "version": "1.0.0",
-  "description": "Modular all-in-one Discord AI assistant with music, TTS and web dashboard.",
+  "version": "2.0.0",
+  "description": "🤖 Advanced all-in-one Discord bot with AI, TTS, music, economy, levels, moderation, and more!",
   "main": "index.js",
   "type": "commonjs",
   "engines": {
@@ -10,7 +10,25 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
-    "register": "node scripts/register-commands.js"
+    "register": "node scripts/register-commands.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "ai",
+    "music",
+    "tts",
+    "moderation",
+    "economy",
+    "levels",
+    "javascript"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xandue077/Ai"
   },
   "dependencies": {
     "@discordjs/voice": "0.19.2",
@@ -22,5 +40,9 @@
     "prism-media": "1.3.5",
     "node-edge-tts": "1.2.10",
     "lavalink-client": "^2.9.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=22.12.0"
   }
 }
