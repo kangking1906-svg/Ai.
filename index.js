@@ -40,7 +40,7 @@ const {
 } = require("./src/web/dashboard");
 
 const {
-  createLavalinkManager
+  createLavalink
 } = require("./src/services/lavalink");
 
 async function main() {
@@ -76,7 +76,7 @@ async function main() {
     client.blacklist = new Set();
 
     logger.info("🎵 Initializing Lavalink manager...");
-    client.lavalink = createLavalinkManager(client);
+    client.lavalink = createLavalink(client);
 
     // Forward Discord gateway packets to Lavalink
     client.on("raw", packet => {
