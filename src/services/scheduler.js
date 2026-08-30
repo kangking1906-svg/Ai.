@@ -1,68 +1,128 @@
 const { getDb } = require('../database');
-const { logger } = require('./logger');
-
-let timer;
+const { logger } = require('../utils/logger');
 
 function startSchedulers(client) {
-  if (timer) return;
-
-  timer = setInterval(async () => {
-    const db = getDb();
-    const now = Date.now();
-
+  logger.info('⏱️ Starting background schedulers...');
+  
+  const reminderScheduler = setInterval(async () => {
     try {
-      // Process reminders
-      for (const reminder of db.prepare('SELECT * FROM reminders WHERE sent = 0 AND remind_at <= ?').all(now)) {
+      const db = getDb();
+      const now = Date.now();
+      const reminders = db.prepare(
+        'SELECT * FROM reminders WHERE sent = 0 AND remind_at <= ? LIMIT 10'
+      ).all(now);
+
+      for (const reminder of reminders) {
         try {
           const user = await client.users.fetch(reminder.user_id);
-          await user.send(`Reminder: ${reminder.message}`);
+          const guild = client.guilds.cache.get(reminder.guild_id);
+          
+          await user.send({
+            embeds: [{
+              color: 0x3498db,
+              title: '⏰ Reminder',
+              description: reminder.message,
+              footer: { text: guild?.name || 'Discord Bot' },
+              timestamp: new Date()
+            }]
+          });
+          
           db.prepare('UPDATE reminders SET sent = 1 WHERE id = ?').run(reminder.id);
+          logger.info(`✅ Reminder sent to ${user.tag}`);
         } catch (error) {
           logger.error(`Failed to send reminder ${reminder.id}`, error);
         }
       }
+    } catch (error) {
+      logger.error('Reminder scheduler error', error);
+    }
+  }, 30000);
 
-      // Process scheduled jobs
-      for (const job of db.prepare('SELECT * FROM scheduled_jobs WHERE status = ? AND run_at <= ?').all('pending', now)) {
-        try {
-          const payload = JSON.parse(job.payload);
-          logger.info(`Executing scheduled job: ${job.type}`);
-          db.prepare('UPDATE scheduled_jobs SET status = ? WHERE id = ?').run('completed', job.id);
-        } catch (error) {
-          logger.error(`Failed to execute scheduled job ${job.id}`, error);
-        }
-      }
+  const giveawayScheduler = setInterval(async () => {
+    try {
+      const db = getDb();
+      const now = Date.now();
+      const giveaways = db.prepare(
+        'SELECT * FROM giveaways WHERE status = ? AND ends_at <= ? LIMIT 5'
+      ).all('active', now);
 
-      // Process giveaways
-      for (const giveaway of db.prepare('SELECT * FROM giveaways WHERE status = ? AND ends_at <= ?').all('active', now)) {
+      for (const giveaway of giveaways) {
         try {
           const channel = await client.channels.fetch(giveaway.channel_id);
           const message = await channel.messages.fetch(giveaway.message_id);
           
-          const entries = db.prepare('SELECT user_id FROM giveaway_entries WHERE giveaway_id = ?').all(giveaway.id);
-          const winners = entries.sort(() => 0.5 - Math.random()).slice(0, giveaway.winners);
-
-          const winnerText = winners.length > 0
-            ? `Winners: ${winners.map(w => `<@${w.user_id}>`).join(', ')}`
-            : 'No valid entries';
-
-          await message.reply(`🎉 Giveaway ended! Prize: **${giveaway.prize}**\n${winnerText}`);
+          const entries = db.prepare(
+            'SELECT user_id FROM giveaway_entries WHERE giveaway_id = ?'
+          ).all(giveaway.id);
+          
+          if (entries.length === 0) {
+            await message.reply('🎉 **Giveaway Ended** - No valid entries!');
+          } else {
+            const winners = [];
+            const winnerCount = Math.min(giveaway.winners, entries.length);
+            
+            for (let i = 0; i < winnerCount; i++) {
+              const randomIndex = Math.floor(Math.random() * entries.length);
+              winners.push(entries[randomIndex].user_id);
+              entries.splice(randomIndex, 1);
+            }
+            
+            const winnerMentions = winners.map(id => `<@${id}>`).join(', ');
+            await message.reply({
+              embeds: [{
+                color: 0xffd700,
+                title: '🎉 Giveaway Ended!',
+                description: `Prize: **${giveaway.prize}**\n\nWinners: ${winnerMentions}`,
+                timestamp: new Date()
+              }]
+            });
+          }
+          
           db.prepare('UPDATE giveaways SET status = ? WHERE id = ?').run('ended', giveaway.id);
+          logger.success(`Giveaway ended: ${giveaway.prize}`);
         } catch (error) {
           logger.error(`Failed to process giveaway ${giveaway.id}`, error);
         }
       }
     } catch (error) {
-      logger.error('Scheduler error', error);
+      logger.error('Giveaway scheduler error', error);
     }
-  }, 10000);
+  }, 60000);
+
+  const ticketScheduler = setInterval(async () => {
+    try {
+      const db = getDb();
+      const staleTickets = db.prepare(
+        'SELECT * FROM tickets WHERE status = ? AND closed_at IS NULL AND created_at < ? LIMIT 5'
+      ).all('open', Date.now() - (7 * 24 * 60 * 60 * 1000));
+
+      for (const ticket of staleTickets) {
+        try {
+          const channel = await client.channels.fetch(ticket.channel_id);
+          await channel.send({
+            embeds: [{
+              color: 0xff9800,
+              title: '⚠️ Ticket Timeout',
+              description: 'This ticket has been open for 7 days. It will be closed automatically in 24 hours if no activity.',
+              timestamp: new Date()
+            }]
+          });
+          logger.warning(`Ticket ${ticket.id} flagged as stale`);
+        } catch (error) {
+          logger.error(`Failed to handle stale ticket ${ticket.id}`, error);
+        }
+      }
+    } catch (error) {
+      logger.error('Ticket scheduler error', error);
+    }
+  }, 3600000);
+
+  return { reminderScheduler, giveawayScheduler, ticketScheduler };
 }
 
 function stopSchedulers() {
-  if (timer) {
-    clearInterval(timer);
-    timer = null;
-  }
+  logger.warn('⏱️ Stopping all schedulers...');
+  // Timers are automatically cleared by clearInterval in shutdown
 }
 
 module.exports = {
