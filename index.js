@@ -1,4 +1,4 @@
-require("dotenv").config();
+require('dotenv').config();
 
 const {
   Client,
@@ -7,49 +7,49 @@ const {
   Collection,
   Events,
   ActivityType
-} = require("discord.js");
+} = require('discord.js');
 
-const express = require("express");
-const config = require("./src/config");
+const express = require('express');
+const config = require('./src/config');
 
 const {
   initDatabase,
   closeDatabase
-} = require("./src/database");
+} = require('./src/database');
 
 const {
   loadCommands,
   registerSlashCommands
-} = require("./src/utils/command-loader");
+} = require('./src/utils/command-loader');
 
 const {
   loadEvents
-} = require("./src/utils/event-loader");
+} = require('./src/utils/event-loader');
 
 const {
   logger
-} = require("./src/utils/logger");
+} = require('./src/utils/logger');
 
 const {
   startSchedulers,
   stopSchedulers
-} = require("./src/services/scheduler");
+} = require('./src/services/scheduler');
 
 const {
   createDashboard
-} = require("./src/web/dashboard");
+} = require('./src/web/dashboard');
 
 const {
   createLavalink
-} = require("./src/services/lavalink");
+} = require('./src/services/lavalink');
 
 async function main() {
   try {
     config.validateStartup();
-    logger.info("🚀 Initializing Discord AI Bot...");
+    logger.info('🚀 Initializing Discord AI Bot...');
 
     initDatabase();
-    logger.info("📊 Database initialized successfully");
+    logger.info('📊 Database initialized successfully');
 
     const client = new Client({
       intents: [
@@ -75,20 +75,20 @@ async function main() {
     client.cooldowns = new Collection();
     client.blacklist = new Set();
 
-    logger.info("🎵 Initializing Lavalink manager...");
+    logger.info('🎵 Initializing Lavalink manager...');
     client.lavalink = createLavalink(client);
 
     // Forward Discord gateway packets to Lavalink
-    client.on("raw", packet => {
+    client.on('raw', packet => {
       try {
         if (
           client.lavalink &&
-          typeof client.lavalink.sendRawData === "function"
+          typeof client.lavalink.sendRawData === 'function'
         ) {
           client.lavalink.sendRawData(packet);
         }
       } catch (error) {
-        logger.error("Lavalink raw packet error", error);
+        logger.error('Lavalink raw packet error', error);
       }
     });
 
@@ -97,14 +97,14 @@ async function main() {
       try {
         if (
           client.lavalink &&
-          typeof client.lavalink.init === "function"
+          typeof client.lavalink.init === 'function'
         ) {
           await client.lavalink.init({
             id: readyClient.user.id,
             username: readyClient.user.username
           });
 
-          logger.info("✅ Lavalink manager initialized successfully");
+          logger.info('✅ Lavalink manager initialized successfully');
         }
 
         // Set bot status
@@ -113,23 +113,23 @@ async function main() {
           type: ActivityType.Watching
         });
       } catch (error) {
-        logger.error("Lavalink initialization failed", error);
+        logger.error('Lavalink initialization failed', error);
       }
     });
 
     // Load commands
-    logger.info("📂 Loading commands...");
+    logger.info('📂 Loading commands...');
     await loadCommands(client);
 
     // Load events
-    logger.info("📡 Loading events...");
+    logger.info('📡 Loading events...');
     loadEvents(client);
 
     // HTTP server
     const app = express();
-    app.disable("x-powered-by");
+    app.disable('x-powered-by');
 
-    app.get("/health", (_req, res) => {
+    app.get('/health', (_req, res) => {
       res.status(200).json({
         ok: true,
         uptime: process.uptime(),
@@ -142,91 +142,91 @@ async function main() {
       });
     });
 
-    app.get("/", (_req, res) => {
+    app.get('/', (_req, res) => {
       res.status(200).json({
-        name: "All-in-One Discord AI Bot",
-        status: "online",
-        message: "Discord AI Bot is running smoothly! 🚀"
+        name: 'All-in-One Discord AI Bot',
+        status: 'online',
+        message: 'Discord AI Bot is running smoothly! 🚀'
       });
     });
 
     if (config.dashboardEnabled) {
-      logger.info("🖥️ Initializing dashboard...");
+      logger.info('🖥️ Initializing dashboard...');
       createDashboard(app, client);
     }
 
     const port = Number(process.env.PORT || config.port || 8080);
 
-    app.listen(port, "0.0.0.0", () => {
+    app.listen(port, '0.0.0.0', () => {
       logger.info(`🌐 HTTP server running on 0.0.0.0:${port}`);
     });
 
     // Discord login
-    logger.info("🔐 Connecting to Discord...");
+    logger.info('🔐 Connecting to Discord...');
     await client.login(config.discordToken);
 
     // Register slash commands
     try {
-      logger.info("📝 Registering slash commands...");
+      logger.info('📝 Registering slash commands...');
       await registerSlashCommands(client);
-      logger.info("✅ Slash commands registered successfully");
+      logger.info('✅ Slash commands registered successfully');
     } catch (error) {
-      logger.error("DISCORD COMMAND REGISTRATION FAILED", error);
+      logger.error('DISCORD COMMAND REGISTRATION FAILED', error);
     }
 
     // Start schedulers
-    logger.info("⏱️ Starting background schedulers...");
+    logger.info('⏱️ Starting background schedulers...');
     startSchedulers(client);
-    logger.info("✅ All systems initialized successfully!");
+    logger.info('✅ All systems initialized successfully!');
 
     // Graceful shutdown
     const shutdown = async () => {
-      logger.warn("🛑 Shutting down gracefully...");
+      logger.warn('🛑 Shutting down gracefully...');
 
       try {
         stopSchedulers();
       } catch (e) {
-        logger.error("Error stopping schedulers", e);
+        logger.error('Error stopping schedulers', e);
       }
 
       try {
         if (client.lavalink) {
           const players = client.lavalink.players;
 
-          if (players && typeof players.values === "function") {
+          if (players && typeof players.values === 'function') {
             for (const player of players.values()) {
               try {
                 await player.destroy();
               } catch (e) {
-                logger.error("Error destroying player", e);
+                logger.error('Error destroying player', e);
               }
             }
           }
         }
       } catch (e) {
-        logger.error("Error cleaning up Lavalink", e);
+        logger.error('Error cleaning up Lavalink', e);
       }
 
       try {
         client.destroy();
       } catch (e) {
-        logger.error("Error destroying client", e);
+        logger.error('Error destroying client', e);
       }
 
       try {
         closeDatabase();
       } catch (e) {
-        logger.error("Error closing database", e);
+        logger.error('Error closing database', e);
       }
 
-      logger.info("✅ Shutdown complete!");
+      logger.info('✅ Shutdown complete!');
       process.exit(0);
     };
 
-    process.on("SIGINT", shutdown);
-    process.on("SIGTERM", shutdown);
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
   } catch (error) {
-    logger.error("FATAL STARTUP ERROR", error);
+    logger.error('FATAL STARTUP ERROR', error);
     process.exit(1);
   }
 }
@@ -234,46 +234,46 @@ async function main() {
 function getLavalinkStatus(client) {
   try {
     if (!client.lavalink) {
-      return "not-created";
+      return 'not-created';
     }
 
     const nodes = client.lavalink.nodeManager?.nodes;
 
     if (!nodes) {
-      return "created";
+      return 'created';
     }
 
     const nodeList =
-      typeof nodes.values === "function"
+      typeof nodes.values === 'function'
         ? [...nodes.values()]
         : [];
 
     if (!nodeList.length) {
-      return "no-nodes";
+      return 'no-nodes';
     }
 
     return nodeList.some(node =>
       node.connected === true ||
       node.isConnected === true
     )
-      ? "connected"
-      : "disconnected";
+      ? 'connected'
+      : 'disconnected';
   } catch (error) {
-    logger.error("Error getting Lavalink status", error);
-    return "unknown";
+    logger.error('Error getting Lavalink status', error);
+    return 'unknown';
   }
 }
 
-process.on("uncaughtException", error => {
-  logger.error("UNCAUGHT EXCEPTION", error);
+process.on('uncaughtException', error => {
+  logger.error('UNCAUGHT EXCEPTION', error);
   process.exit(1);
 });
 
-process.on("unhandledRejection", error => {
-  logger.error("UNHANDLED REJECTION", error);
+process.on('unhandledRejection', error => {
+  logger.error('UNHANDLED REJECTION', error);
 });
 
 main().catch(error => {
-  console.error("FATAL STARTUP ERROR:", error);
+  console.error('FATAL STARTUP ERROR:', error);
   process.exit(1);
 });

@@ -5,7 +5,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-22.12+-green?logo=node.js)](https://nodejs.org/)
 [![Discord.js](https://img.shields.io/badge/Discord.js-14.27-blue?logo=discord)](https://discord.js.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
-[![GitHub](https://img.shields.io/badge/GitHub-xandue077/Ai-black?logo=github)](https://github.com/xandue077/Ai)
+[![GitHub](https://img.shields.io/badge/GitHub-kangking1906--svg/Ai.-black?logo=github)](https://github.com/kangking1906-svg/Ai.)
 
 ---
 
@@ -24,15 +24,15 @@
 - **Voice Channel Integration**: Seamless voice chat connectivity
 
 ### 🛡️ Moderation & Safety
-- **AutoMod System**: Automatic rule enforcement
 - **Warning System**: Track and manage user warnings
-- **Anti-Spam Protection**: Detect and prevent spam messages
+- **Ban/Kick Management**: Server moderation tools
 - **Message Logging**: Track deleted/edited messages
+- **Automod System**: Automatic rule enforcement
 
 ### 💰 Economy System
 - **User Balances**: Currency management per user
 - **Daily Rewards**: Daily bonus distribution
-- **Economic Commands**: Buy, sell, trade operations
+- **Economic Commands**: Transfer operations
 
 ### 📊 Leveling & Rankings
 - **XP System**: Earn experience points
@@ -77,8 +77,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/xandue077/Ai.git
-cd Ai
+git clone https://github.com/kangking1906-svg/Ai.
+cd Ai.
 
 # Install dependencies
 npm install
@@ -87,7 +87,8 @@ npm install
 cp .env.example .env
 
 # Edit .env with your configuration
-nano .env
+# On Linux/Mac: nano .env
+# On Windows: notepad .env
 
 # Start the bot
 npm start
@@ -111,181 +112,9 @@ npm run dev
 DISCORD_TOKEN=your_bot_token_here
 CLIENT_ID=your_client_id_here
 BOT_OWNER_ID=your_user_id_here
-
-# AI Configuration (Optional)
-AI_PROVIDER=groq  # or gemini, openrouter, none
-AI_API_KEY=your_api_key_here
-AI_MODEL=llama-3.3-70b-versatile
-
-# TTS Configuration (Optional)
-TTS_PROVIDER=edge  # or elevenlabs, none
-TTS_API_KEY=your_elevenlabs_key_here
-TTS_DEFAULT_VOICE=en-US-AriaNeural
 ```
 
-### Optional Configuration
-
-```env
-# Server Settings
-PORT=8080
-GUILD_ID=  # For development: set guild ID for faster command registration
-COMMAND_PREFIX=!
-STATUS_TEXT=✨ /help | All-in-One AI Bot
-
-# Logging
-LOG_LEVEL=info  # debug, info, warn, error
-
-# Rate Limiting
-RATE_LIMIT_COMMANDS=3
-RATE_LIMIT_WINDOW=5000
-RATE_LIMIT_AI=2
-RATE_LIMIT_AI_WINDOW=10000
-
-# Feature Toggles
-FEATURE_AI=true
-FEATURE_MUSIC=true
-FEATURE_TTS=true
-FEATURE_MODERATION=true
-FEATURE_ECONOMY=true
-FEATURE_LEVELS=true
-FEATURE_TICKETS=true
-FEATURE_GIVEAWAYS=true
-
-# Music (Lavalink)
-LAVALINK_HOST=localhost
-LAVALINK_PORT=2333
-LAVALINK_PASSWORD=youshallnotpass
-LAVALINK_SECURE=false
-```
-
----
-
-## 📚 Command Groups
-
-### AI Commands
-```
-/ai question: <question>      - Ask the AI anything
-/ai context: <text>           - Set AI context
-/ai settings                  - Configure AI behavior
-```
-
-### Music Commands
-```
-/music play <song>            - Play a song
-/music pause                  - Pause music
-/music resume                 - Resume music
-/music skip                   - Skip current track
-/music queue                  - Show playlist queue
-/music volume <0-100>         - Set volume
-```
-
-### Voice Commands
-```
-/voice join                   - Join your voice channel
-/voice leave                  - Leave voice channel
-/voice speak <text>           - Say text in voice
-/voice pause                  - Pause voice output
-/voice resume                 - Resume voice output
-/voice stop                   - Stop voice output
-```
-
-### Moderation Commands
-```
-/mod warn <user> <reason>     - Warn a user
-/mod warnings <user>          - Check user warnings
-/mod kick <user> <reason>     - Kick a user
-/mod ban <user> <reason>      - Ban a user
-/mod mute <user> <time>       - Mute a user
-```
-
-### Economy Commands
-```
-/economy balance              - Check your balance
-/economy daily                - Claim daily reward
-/economy transfer <user> <amount> - Send currency
-/economy leaderboard          - View top users
-```
-
-### Leveling Commands
-```
-/levels rank                  - Check your rank
-/levels leaderboard           - View guild rankings
-/levels profile <user>        - View user profile
-```
-
-### Other Commands
-```
-/ticket create <topic>        - Create a support ticket
-/giveaway start <prize> <duration> <winners> - Start giveaway
-/remind <time> <message>      - Set a reminder
-/embed create                 - Create custom embed
-/help                         - Show all commands
-```
-
----
-
-## 🏗️ Project Structure
-
-```
-.
-├── index.js                  # Main entry point
-├── package.json              # Dependencies
-├── .env.example              # Environment template
-├── README.md                 # This file
-├── src/
-│   ├── config/
-│   │   └── index.js          # Configuration management
-│   ├── database/
-│   │   └── index.js          # SQLite database initialization
-│   ├── services/
-│   │   ├── scheduler.js      # Background jobs
-│   │   ├── ai.js             # AI service
-│   │   ├── tts.js            # Text-to-speech service
-│   │   ├── music.js          # Music service
-│   │   ├── logging.js        # Logging service
-│   │   └── lavalink.js       # Music server manager
-│   ├── commands/
-│   │   ├── ai/               # AI commands
-│   │   ├── music/            # Music commands
-│   │   ├── voice/            # Voice commands
-│   │   ├── moderation/       # Moderation commands
-│   │   ├── economy/          # Economy commands
-│   │   ├── levels/           # Level commands
-│   │   ├── tickets/          # Ticket system
-│   │   ├── giveaways/        # Giveaway commands
-│   │   ├── utility/          # Utility commands
-│   │   ├── admin/            # Admin commands
-│   │   └── automation/       # Auto-responder commands
-│   ├── events/
-│   │   ├── ready.js          # Bot ready event
-│   │   ├── interactionCreate.js # Slash command handler
-│   │   ├── messageCreate.js  # Message handler
-│   │   ├── guildMemberAdd.js # Member join handler
-│   │   ├── guildMemberRemove.js # Member leave handler
-│   │   └── voiceStateUpdate.js # Voice state handler
-│   ├── utils/
-│   │   ├── logger.js         # Enhanced logging
-│   │   ├── command-loader.js # Command loading system
-│   │   ├── event-loader.js   # Event loading system
-│   │   ├── helpers.js        # Helper functions
-│   │   ├── utilities.js      # Utility functions
-│   │   ├── cache.js          # Caching system
-│   │   ├── database-helper.js # Database utilities
-│   │   ├── command-handler.js # Command execution
-│   │   └── event-handler.js  # Event management
-│   ├── data/
-│   │   ├── khmer-map.json    # Khmer romanization
-│   │   └── bot.sqlite        # Database (created at runtime)
-│   └── web/
-│       └── dashboard.js      # Web dashboard
-├── scripts/
-│   └── register-commands.js  # Command registration script
-└── render.yaml               # Render deployment config
-```
-
----
-
-## 🔧 Advanced Configuration
+See `.env.example` for all available configuration options.
 
 ### AI Provider Setup
 
@@ -331,6 +160,122 @@ The bot uses Lavalink for music playback. You need to:
 
 ---
 
+## 📚 Command Groups
+
+### AI Commands
+```
+/ai question: <question>      - Ask the AI anything
+```
+
+### Music Commands
+```
+/music play <song>            - Play a song
+/music pause                  - Pause music
+/music resume                 - Resume music
+/music skip                   - Skip current track
+/music queue                  - Show playlist queue
+/music volume <0-100>         - Set volume
+```
+
+### Voice Commands
+```
+/voice join                   - Join your voice channel
+/voice leave                  - Leave voice channel
+/voice speak <text>           - Say text in voice
+```
+
+### Moderation Commands
+```
+/mod warn <user> <reason>     - Warn a user
+/mod warnings <user>          - Check user warnings
+/mod kick <user> <reason>     - Kick a user
+/mod ban <user> <reason>      - Ban a user
+```
+
+### Economy Commands
+```
+/economy balance              - Check your balance
+/economy daily                - Claim daily reward
+/economy transfer <user> <amount> - Send currency
+```
+
+### Leveling Commands
+```
+/levels rank                  - Check your rank
+/levels leaderboard           - View guild rankings
+```
+
+### Other Commands
+```
+/ticket create <topic>        - Create a support ticket
+/giveaway start <prize> <duration> <winners> - Start giveaway
+/remind <time> <message>      - Set a reminder
+/help                         - Show all commands
+```
+
+---
+
+## 🏗️ Project Structure
+
+```
+.
+├── index.js                  # Main entry point
+├── package.json              # Dependencies
+├── .env.example              # Environment template
+├── README.md                 # This file
+├── .gitignore                # Git ignore rules
+├── src/
+│   ├── config/
+│   │   └── index.js          # Configuration management
+│   ├── database/
+│   │   └── index.js          # SQLite database initialization
+│   ├── services/
+│   │   ├── scheduler.js      # Background jobs & schedulers
+│   │   ├── ai/index.js       # AI service (Groq, Gemini, OpenRouter)
+│   │   ├── tts/index.js      # Text-to-speech service
+│   │   ├── logging.js        # Guild event logging
+│   │   ├── voice.js          # Voice channel utilities
+│   │   └── lavalink.js       # Music server manager
+│   ├── commands/
+│   │   ├── ai/               # AI commands
+│   │   ├── music/            # Music commands
+│   │   ├── voice/            # Voice commands
+│   │   ├── moderation/       # Moderation commands
+│   │   ├── economy/          # Economy commands
+│   │   ├── levels/           # Level commands
+│   │   ├── tickets/          # Ticket system
+│   │   ├── giveaways/        # Giveaway commands
+│   │   ├── utility/          # Utility commands
+│   │   ├── admin/            # Admin commands
+│   │   ├── automation/       # Auto-responder commands
+│   │   └── server/           # Server commands
+│   ├── events/
+│   │   ├── ready.js          # Bot ready event
+│   │   ├── interactionCreate.js # Slash command handler
+│   │   ├── messageCreate.js  # Message handler
+│   │   ├── guildMemberAdd.js # Member join handler
+│   │   ├── guildMemberRemove.js # Member leave handler
+│   │   └── voiceStateUpdate.js # Voice state handler
+│   ├── utils/
+│   │   ├── logger.js         # Enhanced logging
+│   │   ├── command-loader.js # Command loading system
+│   │   ├── event-loader.js   # Event loading system
+│   │   ├── cooldown.js       # Cooldown/rate limiting
+│   │   ├── permissions.js    # Permission checking
+│   │   ├── time.js           # Time formatting utilities
+│   │   └── khmer.js          # Khmer text processing
+│   ├── data/
+│   │   ├── khmer-map.json    # Khmer romanization mappings
+│   │   └── bot.sqlite        # Database (created at runtime)
+│   └── web/
+│       └── dashboard.js      # Web dashboard
+├── scripts/
+│   └── register-commands.js  # Command registration script
+└── Dockerfile                # Docker container configuration
+```
+
+---
+
 ## 📊 Database Schema
 
 The bot uses SQLite with the following tables:
@@ -340,35 +285,31 @@ The bot uses SQLite with the following tables:
 - **warnings**: Moderation warnings
 - **tickets**: Support tickets
 - **giveaways**: Active giveaways
+- **giveaway_entries**: Giveaway participant tracking
 - **reminders**: User reminders
 - **ai_memory**: AI conversation history
 - **autoresponders**: Auto-response triggers
 - **custom_commands**: Guild-specific commands
+- **scheduled_jobs**: Background job scheduling
+- **voice_config**: Voice channel settings
+- **logs_config**: Event logging configuration
 - **moderation_rules**: Server moderation rules
 
 ---
 
 ## 🌐 Web Dashboard
 
-Access the dashboard at `http://localhost:8080` (when running locally)
+Access the dashboard at `http://localhost:8080/dashboard` (when running locally)
 
 Features:
 - Server statistics
-- User management
-- Command statistics
-- Configuration panel
-- Leaderboards
-- Recent activity logs
+- Bot status and uptime
+- System resource usage
+- Discord metrics
 
 ---
 
 ## 🚀 Deployment
-
-### Render
-The bot is pre-configured for Render deployment:
-```bash
-git push  # Deploy automatically
-```
 
 ### Docker
 ```bash
@@ -376,11 +317,44 @@ docker build -t discord-ai-bot .
 docker run -e DISCORD_TOKEN=xxx discord-ai-bot
 ```
 
+### Render
+The bot is pre-configured for Render deployment:
+```bash
+git push  # Deploy automatically
+```
+
 ### Self-Hosted
 ```bash
 npm install
 npm start
 ```
+
+---
+
+## 🔧 Troubleshooting
+
+### Bot doesn't start
+- Check `DISCORD_TOKEN` is set correctly
+- Check `CLIENT_ID` is set correctly
+- Verify Node.js version: `node --version` (should be 22.12+)
+
+### Commands not showing up
+- Run `npm run register` to manually register slash commands
+- Check bot has `applications.commands` scope in Discord Developer Portal
+
+### AI not working
+- Set `AI_PROVIDER` to `groq`, `gemini`, or `openrouter`
+- Set `AI_API_KEY` to your API key
+- Check API key is valid and has quota remaining
+
+### Music not working
+- Verify Lavalink server is running and accessible
+- Check `LAVALINK_HOST`, `LAVALINK_PORT`, `LAVALINK_PASSWORD`
+- Ensure bot has permission to connect to voice channels
+
+### Database errors
+- Check `data/` directory is writable
+- Verify `better-sqlite3` is properly installed: `npm rebuild`
 
 ---
 
@@ -402,9 +376,8 @@ MIT License - see LICENSE file for details
 
 ## 🆘 Support
 
-- **Issues**: [GitHub Issues](https://github.com/xandue077/Ai/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/xandue077/Ai/discussions)
-- **Discord**: Join our support server (link coming soon)
+- **Issues**: [GitHub Issues](https://github.com/kangking1906-svg/Ai./issues)
+- **Discussions**: [GitHub Discussions](https://github.com/kangking1906-svg/Ai./discussions)
 
 ---
 
@@ -413,17 +386,16 @@ MIT License - see LICENSE file for details
 - [discord.js](https://discord.js.org/) - Discord API wrapper
 - [Lavalink](https://github.com/lavalink-devs/Lavalink) - Music server
 - [Groq](https://www.groq.com/) - AI API
+- [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) - SQLite driver
 - All contributors and supporters
 
 ---
 
-## 📈 Status
+## 📈 Version History
 
-- **Version**: 2.0.0
-- **Status**: ✅ Active & Maintained
-- **Last Updated**: 2026-08-30
-- **Node.js Requirement**: 22.12+
+- **v2.0.0** (2026-08-30) - Complete rewrite with improved architecture, fixed critical bugs, enhanced security and error handling
+- **v1.0.0** (Previous) - Initial release
 
 ---
 
-**Made with ❤️ by xandue077**
+**Made with ❤️ by kangking1906-svg**

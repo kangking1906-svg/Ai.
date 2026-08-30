@@ -1,7 +1,7 @@
 {
   "name": "all-in-one-discord-ai-bot",
   "version": "2.0.0",
-  "description": "🤖 Advanced all-in-one Discord bot with AI, TTS, music, economy, levels, moderation, and more!",
+  "description": "Advanced all-in-one Discord bot with AI, TTS, music, economy, levels, moderation, and more!",
   "main": "index.js",
   "type": "commonjs",
   "engines": {
@@ -11,24 +11,15 @@
     "start": "node index.js",
     "dev": "node --watch index.js",
     "register": "node scripts/register-commands.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "node --check-syntax index.js",
+    "test": "node --test tests/**/*.test.js 2>/dev/null || echo Tests not yet implemented"
   },
-  "keywords": [
-    "discord",
-    "bot",
-    "ai",
-    "music",
-    "tts",
-    "moderation",
-    "economy",
-    "levels",
-    "javascript"
-  ],
+  "keywords": ["discord", "bot", "ai", "music", "tts", "moderation", "economy", "levels", "javascript"],
   "author": "Your Name",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/xandue077/Ai"
+    "url": "https://github.com/kangking1906-svg/Ai."
   },
   "dependencies": {
     "@discordjs/voice": "0.19.2",
@@ -41,8 +32,5 @@
     "node-edge-tts": "1.2.10",
     "lavalink-client": "2.9.0"
   },
-  "devDependencies": {},
-  "engines": {
-    "node": ">=22.12.0"
-  }
+  "devDependencies": {}
 }

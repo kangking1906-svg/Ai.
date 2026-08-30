@@ -1,128 +1,43 @@
-# 🚀 Deployment Guide - All-in-One Discord AI Bot v2.0
+# Deployment Guide
 
 ## Table of Contents
-1. [Local Development](#local-development)
-2. [Render Deployment](#render-deployment)
-3. [Docker Deployment](#docker-deployment)
-4. [VPS Deployment](#vps-deployment)
-5. [Troubleshooting](#troubleshooting)
-
----
-
-## Local Development
-
-### Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/xandue077/Ai.git
-cd Ai
-
-# Install dependencies
-npm install
-
-# Create environment file
-cp .env.example .env
-
-# Edit with your configuration
-nano .env  # or use your preferred editor
-```
-
-### Required Environment Variables
-
-```env
-DISCORD_TOKEN=your_bot_token
-CLIENT_ID=your_client_id
-BOT_OWNER_ID=your_user_id
-```
-
-### Running
-
-```bash
-# Production mode
-npm start
-
-# Development mode with auto-reload
-npm run dev
-```
-
-### Health Check
-
-```bash
-# Check if bot is running
-curl http://localhost:8080/health
-
-# Should return:
-# {"ok":true,"uptime":123.45,...}
-```
-
----
-
-## Render Deployment
-
-### Step 1: Push to GitHub
-
-```bash
-git add .
-git commit -m "Deploy to Render"
-git push origin main
-```
-
-### Step 2: Create Render Service
-
-1. Go to [render.com](https://render.com)
-2. Click "New" → "Web Service"
-3. Connect your GitHub repository
-4. Fill in:
-   - **Name**: `discord-ai-bot`
-   - **Environment**: `Node`
-   - **Build Command**: `npm install`
-   - **Start Command**: `npm start`
-5. Add environment variables (same as .env)
-6. Click "Create Web Service"
-
-### Step 3: Set Environment Variables
-
-1. Go to Settings → Environment
-2. Add all variables from `.env.example`
-3. Click "Save"
-
-### Benefits
-- ✅ Free tier available
-- ✅ Auto-deploy on git push
-- ✅ No credit card for free tier
-- ✅ Good uptime
-
-### Limitations
-- ❌ Free tier spins down after 15 minutes of inactivity
-- ❌ Limited to 750 hours/month
-- Solution: Use paid tier or upgrade to Pro ($7/month)
+1. [Docker Deployment](#docker-deployment)
+2. [Render.com](#rendercom)
+3. [Railway](#railway)
+4. [Self-Hosted](#self-hosted)
+5. [Environment Configuration](#environment-configuration)
 
 ---
 
 ## Docker Deployment
 
-### Create Dockerfile
+### Build the Docker Image
 
-```dockerfile
-FROM node:22-alpine
-
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm ci --only=production
-
-COPY . .
-
-EXPOSE 8080
-
-CMD ["npm", "start"]
+```bash
+docker build -t discord-ai-bot:latest .
 ```
 
-### Create docker-compose.yml
+### Run the Container
+
+```bash
+docker run \
+  -e DISCORD_TOKEN=your_token \
+  -e CLIENT_ID=your_client_id \
+  -e BOT_OWNER_ID=your_user_id \
+  -e AI_PROVIDER=groq \
+  -e AI_API_KEY=your_api_key \
+  -v discord-bot-data:/app/data \
+  --name discord-bot \
+  discord-ai-bot:latest
+```
+
+### Docker Compose
+
+Create `docker-compose.yml`:
 
 ```yaml
 version: '3.8'
+
 services:
   bot:
     build: .
@@ -131,349 +46,303 @@ services:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       CLIENT_ID: ${CLIENT_ID}
       BOT_OWNER_ID: ${BOT_OWNER_ID}
-      AI_PROVIDER: ${AI_PROVIDER}
+      AI_PROVIDER: groq
       AI_API_KEY: ${AI_API_KEY}
-      TTS_PROVIDER: ${TTS_PROVIDER}
       PORT: 8080
+    volumes:
+      - bot-data:/app/data
     ports:
       - "8080:8080"
-    volumes:
-      - ./data:/app/data
     restart: unless-stopped
-    networks:
-      - discord-bot
 
-networks:
-  discord-bot:
-    driver: bridge
+volumes:
+  bot-data:
 ```
 
-### Run Docker
-
+Start with:
 ```bash
-# Build and run
 docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop
-docker-compose down
 ```
 
 ---
 
-## VPS Deployment
+## Render.com
 
-### Recommended: Ubuntu 22.04 LTS
+The bot includes `render.yaml` for automated deployment.
 
-### Step 1: Initial Setup
+### Setup Instructions
+
+1. Push your code to GitHub
+2. Sign up at [render.com](https://render.com)
+3. Create new "Web Service" from GitHub repo
+4. Select this repository
+5. Configure:
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+   - **Environment**: Node
+   - **Node Version**: 22.12.0
+
+6. Add environment variables in dashboard:
+   - `DISCORD_TOKEN`
+   - `CLIENT_ID`
+   - `BOT_OWNER_ID`
+   - `AI_PROVIDER`
+   - `AI_API_KEY`
+
+7. Deploy!
+
+### Auto-Deploy on Push
+
+Enable "Auto-Deploy" in Render dashboard to automatically deploy when you push to main branch.
+
+---
+
+## Railway
+
+The bot includes `railway.json` for Railway.app deployment.
+
+### Setup Instructions
+
+1. Push to GitHub
+2. Sign up at [railway.app](https://railway.app)
+3. Create new project from GitHub repo
+4. Railway auto-detects Node.js setup
+5. Add environment variables
+6. Deploy!
+
+---
+
+## Self-Hosted
+
+### Linux/Ubuntu
 
 ```bash
-# Update system
-sudo apt update && sudo apt upgrade -y
-
-# Install Node.js
+# Install Node.js 22 (if not already installed)
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs
-
-# Install git
-sudo apt install -y git
-
-# Verify installation
-node --version  # Should be v22.x.x
-npm --version   # Should be 10.x.x or higher
-```
-
-### Step 2: Deploy Bot
-
-```bash
-# Create app directory
-sudo mkdir -p /opt/discord-bot
-cd /opt/discord-bot
+sudo apt-get install -y nodejs
 
 # Clone repository
-sudo git clone https://github.com/xandue077/Ai.git .
+git clone https://github.com/kangking1906-svg/Ai.
+cd Ai.
 
 # Install dependencies
-sudo npm ci --only=production
+npm install
 
 # Create .env file
-sudo cp .env.example .env
-sudo nano .env  # Edit with your configuration
-
-# Set permissions
-sudo chown -R $USER:$USER /opt/discord-bot
-```
-
-### Step 3: Setup PM2 (Process Manager)
-
-```bash
-# Install PM2 globally
-sudo npm install -g pm2
-
-# Start bot with PM2
-cd /opt/discord-bot
-pm2 start index.js --name "discord-ai-bot"
-
-# Save PM2 configuration
-pm2 save
-
-# Setup auto-start on reboot
-pm2 startup
-
-# View logs
-pm2 logs discord-ai-bot
-
-# Monitor
-pm2 monit
-```
-
-### Step 4: Setup Nginx Reverse Proxy (Optional)
-
-```bash
-# Install Nginx
-sudo apt install -y nginx
-
-# Create config
-sudo nano /etc/nginx/sites-available/discord-bot
-```
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location / {
-        proxy_pass http://localhost:8080;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-```bash
-# Enable site
-sudo ln -s /etc/nginx/sites-available/discord-bot /etc/nginx/sites-enabled/
-
-# Test config
-sudo nginx -t
-
-# Restart Nginx
-sudo systemctl restart nginx
-```
-
-### Step 5: Setup SSL (Recommended)
-
-```bash
-# Install Certbot
-sudo apt install -y certbot python3-certbot-nginx
-
-# Get SSL certificate
-sudo certbot --nginx -d your-domain.com
-
-# Auto-renewal
-sudo systemctl enable certbot.timer
-```
-
-### Useful PM2 Commands
-
-```bash
-# List running processes
-pm2 list
-
-# Restart bot
-pm2 restart discord-ai-bot
-
-# Stop bot
-pm2 stop discord-ai-bot
+cp .env.example .env
+# Edit .env with your settings
+nano .env
 
 # Start bot
-pm2 start discord-ai-bot
+npm start
+```
 
-# View logs (last 100 lines)
-pm2 logs discord-ai-bot --lines 100
+### Windows
 
-# Flush logs
-pm2 flush
+1. Install [Node.js 22.12+](https://nodejs.org/)
+2. Clone repository:
+   ```cmd
+   git clone https://github.com/kangking1906-svg/Ai.
+   cd Ai.
+   ```
+3. Install dependencies:
+   ```cmd
+   npm install
+   ```
+4. Copy and edit `.env`:
+   ```cmd
+   copy .env.example .env
+   notepad .env
+   ```
+5. Start bot:
+   ```cmd
+   npm start
+   ```
+
+### macOS
+
+```bash
+# Install Node.js with Homebrew
+brew install node@22
+
+# Clone and setup
+git clone https://github.com/kangking1906-svg/Ai.
+cd Ai.
+npm install
+cp .env.example .env
+
+# Edit .env
+nano .env
+
+# Start
+npm start
+```
+
+### Running as a Service (Linux)
+
+Create `/etc/systemd/system/discord-bot.service`:
+
+```ini
+[Unit]
+Description=Discord AI Bot
+After=network.target
+
+[Service]
+Type=simple
+User=bot
+WorkingDirectory=/home/bot/Ai.
+ExecStart=/usr/bin/node /home/bot/Ai./index.js
+Restart=always
+RestartSec=10
+Environment="NODE_ENV=production"
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start:
+```bash
+sudo systemctl enable discord-bot
+sudo systemctl start discord-bot
+sudo systemctl status discord-bot
 ```
 
 ---
 
-## Troubleshooting
+## Environment Configuration
 
-### Bot Won't Start
+### Minimal Setup (Required)
 
-**Error: "DISCORD_TOKEN is missing"**
-```bash
-# Check .env file exists
-ls -la .env
-
-# Verify token is set
-grep DISCORD_TOKEN .env
-
-# Make sure it's not commented out
+```env
+DISCORD_TOKEN=your_bot_token
+CLIENT_ID=your_client_id
+BOT_OWNER_ID=your_user_id
 ```
 
-**Error: "Client ID mismatch"**
-```bash
-# Get correct values from:
-# https://discord.com/developers/applications
-# 1. Select your application
-# 2. Copy Client ID and update .env
+### Recommended Setup
+
+```env
+# Discord
+DISCORD_TOKEN=your_bot_token
+CLIENT_ID=your_client_id
+BOT_OWNER_ID=your_user_id
+
+# Server
+PORT=8080
+LOG_LEVEL=info
+
+# AI (Groq recommended for free tier)
+AI_PROVIDER=groq
+AI_API_KEY=your_groq_key
+AI_MODEL=llama-3.3-70b-versatile
+
+# TTS
+TTS_PROVIDER=edge
+
+# Music (optional - leave empty to disable)
+LAVALINK_HOST=
+LAVALINK_PORT=2333
+LAVALINK_PASSWORD=
+
+# Features
+FEATURE_AI=true
+FEATURE_MUSIC=true
+FEATURE_TTS=true
+FEATURE_MODERATION=true
+FEATURE_ECONOMY=true
+FEATURE_LEVELS=true
 ```
 
-### Database Errors
+### Full Production Setup
 
-**"Cannot create database file"**
+See `.env.example` for all 200+ configuration options.
+
+---
+
+## Monitoring and Logs
+
+### Docker Logs
 ```bash
-# Create data directory
-mkdir -p ./data
-chmod 755 ./data
-
-# Remove existing database and restart
-rm ./data/bot.sqlite
+docker logs -f discord-bot
 ```
 
-### Memory Issues
+### Render Logs
+View in Render dashboard under "Logs" tab
 
+### Railway Logs
+View in Railway dashboard under "Deploy" tab
+
+### System Service Logs
 ```bash
-# Check memory usage
-free -h
-
-# Limit Node.js memory
-NODE_OPTIONS="--max-old-space-size=512" npm start
-```
-
-### High CPU Usage
-
-```bash
-# Kill and restart bot
-pm2 restart discord-ai-bot
-
-# Check logs for errors
-pm2 logs discord-ai-bot
-
-# Reduce scheduler frequency if needed
-```
-
-### Commands Not Registering
-
-```bash
-# Force re-register commands
-AUTO_REGISTER_COMMANDS=true npm start
-
-# Wait 5-10 minutes for Discord to sync
-
-# If still not working:
-# 1. Check bot has applications.commands scope
-# 2. Check bot has permission in guild
-# 3. Restart bot
-```
-
-### Connection Issues
-
-```bash
-# Test Discord connection
-curl -I https://discord.com/api/v10/gateway
-
-# Check network connectivity
-ping google.com
-
-# Check firewall isn't blocking
-sudo ufw status
-```
-
-### AI/TTS Not Working
-
-```bash
-# Verify API key is set
-grep AI_API_KEY .env
-grep TTS_API_KEY .env
-
-# Check API key validity
-# Visit provider website to verify key is active
-
-# Check rate limits
-# Look at bot logs for 429/quota errors
+journalctl -u discord-bot -f
 ```
 
 ---
 
-## Monitoring
+## Health Checks
 
-### Health Check Endpoint
-
+Bot exposes health endpoint:
 ```bash
 curl http://localhost:8080/health
 ```
 
-Response:
+Expected response:
 ```json
 {
   "ok": true,
-  "uptime": 3600.5,
+  "uptime": 3600,
   "discordReady": true,
-  "guilds": 42,
-  "users": 5000,
-  "lavalink": "connected",
-  "timestamp": "2026-08-30T10:00:00.000Z"
+  "guilds": 5,
+  "users": 1500,
+  "lavalink": "connected"
 }
 ```
 
-### Log Monitoring
+---
 
-```bash
-# Real-time logs (PM2)
-pm2 logs discord-ai-bot --follow
+## Troubleshooting Deployment
 
-# Filter by log level
-pm2 logs discord-ai-bot | grep "ERROR"
-```
+### Bot crashes on startup
+1. Check logs for error message
+2. Verify all required environment variables are set
+3. Ensure DISCORD_TOKEN is valid
+4. Check Node.js version: `node --version` (need 22.12+)
 
-### Uptime Monitoring
+### Commands not registering
+1. Wait 5 minutes after first startup
+2. Run `npm run register` to force re-registration
+3. Check CLIENT_ID is correct
+4. Verify bot has `applications.commands` scope
 
-Use services like:
-- [UptimeRobot](https://uptimerobot.com) - Free
-- [Pingdom](https://pingdom.com) - Paid
-- [StatusPage](https://www.statuspage.io/) - Paid
+### High memory usage
+1. Reduce `AI_CONTEXT_MESSAGES` (default: 10)
+2. Ensure database maintenance runs (automatic)
+3. Check for memory leaks in logs
 
-Monitor endpoint: `http://your-domain/health`
+### Database locked errors
+1. Only one bot instance should run at a time
+2. Ensure previous instance fully stopped before restart
 
 ---
 
-## Performance Tips
+## Best Practices
 
-1. **Enable Caching**: Already built-in, reduces database queries
-2. **Use Rate Limiting**: Configured in .env
-3. **Optimize Database**: Use indexes on frequently queried fields
-4. **Monitor Memory**: Set memory limit in PM2 ecosystem.config.js
-5. **Use CDN**: For static assets if using web dashboard
-6. **Compress Responses**: Already enabled in Express
-
----
-
-## Security Best Practices
-
-1. ✅ **Never commit .env file**
-2. ✅ **Use strong bot token** (rotate if exposed)
-3. ✅ **Limit permissions** - Only grant needed permissions
-4. ✅ **Use HTTPS** - Enable SSL in production
-5. ✅ **Keep dependencies updated** - Run `npm audit` regularly
-6. ✅ **Use environment variables** - Never hardcode secrets
-7. ✅ **Enable 2FA** - On your Discord account
+1. **Always use HTTPS** in production
+2. **Enable 2FA** on Discord account
+3. **Rotate tokens** periodically
+4. **Monitor uptime** and set alerts
+5. **Regular backups** of database
+6. **Keep Node.js updated** for security patches
+7. **Use staging environment** before production changes
+8. **Log all changes** for audit trail
 
 ---
 
-## Getting Help
+## Cost Estimation
 
-- **GitHub Issues**: [Report bugs](https://github.com/xandue077/Ai/issues)
-- **Discord Community**: Join our support server (coming soon)
-- **Documentation**: Check README.md for detailed info
+- **Render**: ~$7-12/month (free tier with limitations)
+- **Railway**: Pay-as-you-go, typically $5-15/month
+- **Docker VPS**: $5-10/month (DigitalOcean, Linode, etc.)
+- **AWS Lambda**: Extremely cheap for light usage
 
----
-
-**Last Updated**: 2026-08-30
+Choose based on your bot's activity level and persistence requirements.

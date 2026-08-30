@@ -1,9 +1,12 @@
 const { getDb } = require('../database');
 const { logger } = require('../utils/logger');
 
+let schedulers = [];
+
 function startSchedulers(client) {
   logger.info('⏱️ Starting background schedulers...');
   
+  // Reminder scheduler
   const reminderScheduler = setInterval(async () => {
     try {
       const db = getDb();
@@ -37,7 +40,9 @@ function startSchedulers(client) {
       logger.error('Reminder scheduler error', error);
     }
   }, 30000);
+  schedulers.push(reminderScheduler);
 
+  // Giveaway scheduler
   const giveawayScheduler = setInterval(async () => {
     try {
       const db = getDb();
@@ -60,11 +65,12 @@ function startSchedulers(client) {
           } else {
             const winners = [];
             const winnerCount = Math.min(giveaway.winners, entries.length);
+            const entriesCopy = [...entries];
             
             for (let i = 0; i < winnerCount; i++) {
-              const randomIndex = Math.floor(Math.random() * entries.length);
-              winners.push(entries[randomIndex].user_id);
-              entries.splice(randomIndex, 1);
+              const randomIndex = Math.floor(Math.random() * entriesCopy.length);
+              winners.push(entriesCopy[randomIndex].user_id);
+              entriesCopy.splice(randomIndex, 1);
             }
             
             const winnerMentions = winners.map(id => `<@${id}>`).join(', ');
@@ -88,7 +94,9 @@ function startSchedulers(client) {
       logger.error('Giveaway scheduler error', error);
     }
   }, 60000);
+  schedulers.push(giveawayScheduler);
 
+  // Ticket scheduler
   const ticketScheduler = setInterval(async () => {
     try {
       const db = getDb();
@@ -116,13 +124,22 @@ function startSchedulers(client) {
       logger.error('Ticket scheduler error', error);
     }
   }, 3600000);
+  schedulers.push(ticketScheduler);
 
   return { reminderScheduler, giveawayScheduler, ticketScheduler };
 }
 
 function stopSchedulers() {
   logger.warn('⏱️ Stopping all schedulers...');
-  // Timers are automatically cleared by clearInterval in shutdown
+  for (const scheduler of schedulers) {
+    try {
+      clearInterval(scheduler);
+    } catch (e) {
+      logger.error('Error clearing scheduler', e);
+    }
+  }
+  schedulers = [];
+  logger.info('✅ All schedulers stopped');
 }
 
 module.exports = {
