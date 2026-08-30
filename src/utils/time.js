@@ -1,0 +1,1 @@
+function parseDuration(s){const m=String(s).trim().match(/^(\d+)\s*(s|m|h|d|w)$/i);if(!m)return null;return Number(m[1])*({s:1000,m:60000,h:3600000,d:86400000,w:604800000}[m[2].toLowerCase()]);}module.exports={parseDuration};
