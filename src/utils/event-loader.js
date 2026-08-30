@@ -1,1 +1,26 @@
-const fs=require('fs'),path=require('path');const {logger}=require('./logger');function loadEvents(client){for(const f of fs.readdirSync(path.join(__dirname,'..','events')).filter(x=>x.endsWith('.js'))){try{const e=require(path.join(__dirname,'..','events',f));if(e.once)client.once(e.name,(...a)=>e.execute(...a,client));else client.on(e.name,(...a)=>e.execute(...a,client));}catch(err){logger.error(`Event ${f} failed`,err)}}}module.exports={loadEvents};
+const fs = require('fs');
+const path = require('path');
+const { logger } = require('./logger');
+
+function loadEvents(client) {
+  const eventDir = path.join(__dirname, '..', 'events');
+  
+  for (const file of fs.readdirSync(eventDir).filter(x => x.endsWith('.js'))) {
+    try {
+      delete require.cache[require.resolve(path.join(eventDir, file))];
+      const event = require(path.join(eventDir, file));
+
+      if (event.once) {
+        client.once(event.name, (...args) => event.execute(...args));
+      } else {
+        client.on(event.name, (...args) => event.execute(...args));
+      }
+
+      logger.info(`Loaded event: ${event.name}`);
+    } catch (error) {
+      logger.error(`Failed to load event ${file}`, error);
+    }
+  }
+}
+
+module.exports = { loadEvents };
