@@ -1,90 +1,233 @@
-const dotenv = require("dotenv");
+const path = require("path");
 
-dotenv.config();
+function bool(
+  value,
+  fallback = false
+) {
+  if (value == null) {
+    return fallback;
+  }
 
-function numberEnv(name, fallback) {
-  const value = Number(process.env[name]);
-  return Number.isFinite(value) ? value : fallback;
+  return [
+    "1",
+    "true",
+    "yes",
+    "on"
+  ].includes(
+    String(value).toLowerCase()
+  );
+}
+
+function num(
+  value,
+  fallback
+) {
+  const number = Number(value);
+
+  return Number.isFinite(number)
+    ? number
+    : fallback;
 }
 
 const config = {
-  discordToken: process.env.DISCORD_TOKEN || "",
-  clientId: process.env.CLIENT_ID || "",
-  guildId: process.env.GUILD_ID || "",
+  port: num(
+    process.env.PORT,
+    8080
+  ),
 
-  ownerId: process.env.BOT_OWNER_ID || "",
+  discordToken:
+    process.env.DISCORD_TOKEN,
 
-  statusText: process.env.STATUS_TEXT || "AI Assistant",
+  clientId:
+    process.env.CLIENT_ID,
 
-  port: numberEnv("PORT", 3000),
+  guildId:
+    process.env.GUILD_ID || "",
+
+  ownerId:
+    process.env.BOT_OWNER_ID || "",
 
   databasePath:
-    process.env.DATABASE_PATH || "./data/bot.sqlite",
+    path.resolve(
+      process.env.DATABASE_PATH ||
+      "./data/bot.sqlite"
+    ),
 
   logLevel:
-    process.env.LOG_LEVEL || "info",
+    process.env.LOG_LEVEL ||
+    "info",
 
-  dashboardEnabled:
-    String(process.env.DASHBOARD_ENABLED || "true").toLowerCase() === "true",
-
-  autoRegister:
-    String(process.env.AUTO_REGISTER_COMMANDS || "true").toLowerCase() === "true",
+  prefix:
+    process.env.COMMAND_PREFIX ||
+    "!",
 
   customBotRoleId:
-    process.env.CUSTOM_BOT_ROLE_ID || "",
+    process.env.CUSTOM_BOT_ROLE_ID ||
+    "",
 
   ai: {
     provider:
-      String(process.env.AI_PROVIDER || "none").toLowerCase(),
+      (
+        process.env.AI_PROVIDER ||
+        "none"
+      ).toLowerCase(),
 
     key:
-      process.env.AI_API_KEY || "",
+      process.env.AI_API_KEY ||
+      "",
 
     model:
-      process.env.AI_MODEL || "",
-
-    contextMessages:
-      numberEnv("AI_CONTEXT_MESSAGES", 12),
-
-    temperature:
-      numberEnv("AI_TEMPERATURE", 0.7),
-
-    maxTokens:
-      numberEnv("AI_MAX_TOKENS", 2048),
-
-    userCooldownMs:
-      numberEnv("AI_USER_COOLDOWN_MS", 5000),
+      process.env.AI_MODEL ||
+      "llama-3.3-70b-versatile",
 
     baseUrl:
-      process.env.AI_BASE_URL || ""
+      process.env.AI_BASE_URL ||
+      "",
+
+    maxTokens:
+      num(
+        process.env.AI_MAX_TOKENS,
+        1200
+      ),
+
+    temperature:
+      num(
+        process.env.AI_TEMPERATURE,
+        0.7
+      ),
+
+    contextMessages:
+      num(
+        process.env.AI_CONTEXT_MESSAGES,
+        8
+      ),
+
+    userCooldownMs:
+      num(
+        process.env.AI_USER_COOLDOWN_MS,
+        8000
+      ),
+
+    guildEnabled:
+      bool(
+        process.env.AI_GUILD_ENABLED,
+        true
+      )
   },
 
   tts: {
     provider:
-      String(process.env.TTS_PROVIDER || "none").toLowerCase(),
+      (
+        process.env.TTS_PROVIDER ||
+        "edge"
+      ).toLowerCase(),
 
     key:
-      process.env.TTS_API_KEY || "",
+      process.env.TTS_API_KEY ||
+      "",
 
     defaultVoice:
       process.env.TTS_DEFAULT_VOICE ||
       "en-US-AndrewMultilingualNeural",
 
     maxChars:
-      numberEnv("TTS_MAX_CHARS", 1000),
+      num(
+        process.env.TTS_MAX_CHARS,
+        1200
+      ),
 
     userCooldownMs:
-      numberEnv("TTS_USER_COOLDOWN_MS", 3000)
+      num(
+        process.env.TTS_USER_COOLDOWN_MS,
+        4000
+      )
+  },
+
+  dashboardEnabled:
+    bool(
+      process.env.DASHBOARD_ENABLED,
+      true
+    ),
+
+  dashboardPublic:
+    bool(
+      process.env.DASHBOARD_PUBLIC,
+      true
+    ),
+
+  maxMessageLength:
+    num(
+      process.env.MAX_MESSAGE_LENGTH,
+      2000
+    ),
+
+  maxBulkDelete:
+    Math.min(
+      num(
+        process.env.MAX_BULK_DELETE,
+        100
+      ),
+      100
+    ),
+
+  allowMassMentions:
+    bool(
+      process.env.AI_ALLOW_MASS_MENTIONS,
+      false
+    ),
+
+  autoRegister:
+    bool(
+      process.env.AUTO_REGISTER_COMMANDS,
+      true
+    ),
+
+  statusText:
+    process.env.STATUS_TEXT ||
+    "Use /help | All-in-one AI Bot",
+
+  lavalink: {
+    host:
+      process.env.LAVALINK_HOST ||
+      "",
+
+    port:
+      num(
+        process.env.LAVALINK_PORT,
+        2333
+      ),
+
+    password:
+      process.env.LAVALINK_PASSWORD ||
+      "",
+
+    nodeId:
+      process.env.LAVALINK_NODE_ID ||
+      "main",
+
+    secure:
+      bool(
+        process.env.LAVALINK_SECURE,
+        false
+      ),
+
+    searchPlatform:
+      process.env.LAVALINK_SEARCH_PLATFORM ||
+      "ytsearch"
   }
 };
 
 function validateStartup() {
   if (!config.discordToken) {
-    throw new Error("DISCORD_TOKEN is missing.");
+    throw new Error(
+      "DISCORD_TOKEN is missing."
+    );
   }
 
   if (!config.clientId) {
-    throw new Error("CLIENT_ID is missing.");
+    throw new Error(
+      "CLIENT_ID is missing."
+    );
   }
 
   const allowedAI = [
@@ -94,7 +237,11 @@ function validateStartup() {
     "openrouter"
   ];
 
-  if (!allowedAI.includes(config.ai.provider)) {
+  if (
+    !allowedAI.includes(
+      config.ai.provider
+    )
+  ) {
     throw new Error(
       `Unsupported AI_PROVIDER: ${config.ai.provider}`
     );
@@ -106,6 +253,21 @@ function validateStartup() {
     "elevenlabs"
   ];
 
+  if (
+    !allowedTTS.includes(
+      config.tts.provider
+    )
+  ) {
+    throw new Error(
+      `Unsupported TTS_PROVIDER: ${config.tts.provider}`
+    );
+  }
+}
+
+module.exports = {
+  ...config,
+  validateStartup
+};
   if (!allowedTTS.includes(config.tts.provider)) {
     throw new Error(
       `Unsupported TTS_PROVIDER: ${config.tts.provider}`
