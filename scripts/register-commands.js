@@ -21,7 +21,38 @@ function walk(dir) {
   }
 }
 
+// Sort files so the order is always predictable
+files.sort();
+
 walk(path.join(__dirname, "..", "src", "commands"));
+
+// Discord requires required options BEFORE optional options.
+// Fix this automatically at every level.
+function fixOptions(options) {
+  if (!Array.isArray(options)) return options;
+
+  const fixed = options.map(option => {
+    const copy = { ...option };
+
+    if (Array.isArray(copy.options)) {
+      copy.options = fixOptions(copy.options);
+    }
+
+    return copy;
+  });
+
+  fixed.sort((a, b) => {
+    const aRequired = a.required === true;
+    const bRequired = b.required === true;
+
+    if (aRequired && !bRequired) return -1;
+    if (!aRequired && bRequired) return 1;
+
+    return 0;
+  });
+
+  return fixed;
+}
 
 const commands = [];
 
@@ -30,77 +61,75 @@ for (const file of files) {
     const command = require(file);
 
     if (!command.data) {
-      console.log(`⚠️ SKIPPED: ${file} - no data`);
+      console.log(`⚠️ Skipping ${file}: no data`);
       continue;
     }
 
     const json = command.data.toJSON();
 
-    console.log(`✅ Checking: ${file}`);
-    console.log(`   Command: ${json.name}`);
+    if (Array.isArray(json.options)) {
+      json.options = fixOptions(json.options);
+    }
 
-    commands.push({
-      file,
-      json
-    });
+    console.log(`✅ Command: ${json.name} ← ${file}`);
+
+    commands.push(json);
+
   } catch (error) {
-    console.error(`❌ FAILED TO LOAD: ${file}`);
+    console.error(`❌ Failed to load: ${file}`);
     console.error(error);
   }
 }
 
 async function register() {
+  if (!process.env.DISCORD_TOKEN) {
+    throw new Error("DISCORD_TOKEN is missing.");
+  }
+
+  if (!process.env.CLIENT_ID) {
+    throw new Error("CLIENT_ID is missing.");
+  }
+
   const rest = new REST({ version: "10" })
     .setToken(process.env.DISCORD_TOKEN);
 
-  const body = [];
+  console.log(`📦 Registering ${commands.length} commands...`);
 
-  for (const command of commands) {
-    try {
-      body.push(command.json);
-    } catch (error) {
-      console.error(`❌ Invalid command: ${command.file}`);
-      console.error(error);
-    }
+  if (process.env.GUILD_ID) {
+    console.log(`📍 Guild: ${process.env.GUILD_ID}`);
+
+    await rest.put(
+      Routes.applicationGuildCommands(
+        process.env.CLIENT_ID,
+        process.env.GUILD_ID
+      ),
+      {
+        body: commands
+      }
+    );
+  } else {
+    console.log("🌍 Registering globally...");
+
+    await rest.put(
+      Routes.applicationCommands(process.env.CLIENT_ID),
+      {
+        body: commands
+      }
+    );
   }
 
-  console.log(`📦 Total commands: ${body.length}`);
-
-  try {
-    let result;
-
-    if (process.env.GUILD_ID) {
-      console.log("📍 Registering to guild:", process.env.GUILD_ID);
-
-      result = await rest.put(
-        Routes.applicationGuildCommands(
-          process.env.CLIENT_ID,
-          process.env.GUILD_ID
-        ),
-        { body }
-      );
-    } else {
-      console.log("🌍 Registering globally");
-
-      result = await rest.put(
-        Routes.applicationCommands(process.env.CLIENT_ID),
-        { body }
-      );
-    }
-
-    console.log(`✅ Successfully registered ${result.length} commands.`);
-  } catch (error) {
-    console.error("❌ DISCORD COMMAND REGISTRATION FAILED");
-    console.error(error);
-
-    if (error.rawError?.errors) {
-      console.error(
-        JSON.stringify(error.rawError.errors, null, 2)
-      );
-    }
-
-    process.exit(1);
-  }
+  console.log(`✅ Successfully registered ${commands.length} commands!`);
 }
 
-register();
+register().catch(error => {
+  console.error("❌ COMMAND REGISTRATION FAILED");
+  console.error(error);
+
+  if (error.rawError?.errors) {
+    console.error(
+      JSON.stringify(error.rawError.errors, null, 2)
+    );
+  }
+
+  process.exit(1);
+});
