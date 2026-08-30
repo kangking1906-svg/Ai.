@@ -1,1 +1,30 @@
-const map=require('../data/khmer-map.json');function esc(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}function normalizeRomanizedKhmer(text){let o=String(text);for(const k of Object.keys(map).sort((a,b)=>b.length-a.length))o=o.replace(new RegExp(`(^|\\s)${esc(k)}(?=\\s|$)`,'gi'),`$1${map[k]}`);return o;}function normalizeForSpeech(text){return normalizeRomanizedKhmer(String(text).replace(/<@&?\d+>/g,' ').replace(/<@!?\d+>/g,' '));}module.exports={normalizeRomanizedKhmer,normalizeForSpeech};
+const khmerMap = require('../data/khmer-map.json');
+
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
+}
+
+function normalizeRomanizedKhmer(text) {
+  let output = String(text);
+  const sortedKeys = Object.keys(khmerMap).sort((a, b) => b.length - a.length);
+  for (const romanized of sortedKeys) {
+    const khmer = khmerMap[romanized];
+    const regex = new RegExp(escapeRegex(romanized), 'gi');
+    output = output.replace(regex, khmer);
+  }
+  return output;
+}
+
+function normalizeForSpeech(text) {
+  return String(text)
+    .normalize('NFD')
+    .replace(/[^\p{L}\p{N}\s.,!?;:()\-]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+module.exports = {
+  normalizeRomanizedKhmer,
+  normalizeForSpeech,
+  escapeRegex
+};
