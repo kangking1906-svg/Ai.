@@ -3,23 +3,21 @@ const {
   EmbedBuilder
 } = require("discord.js");
 
-const {
-  getLavalink
-} = require("../../services/lavalink");
+const { getLavalink } = require("../../services/lavalink");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("music")
-    .setDescription("Lavalink music player")
+    .setDescription("🎵 Lavalink music player")
 
     .addSubcommand(sub =>
       sub
         .setName("play")
-        .setDescription("Play a song or search for a song")
+        .setDescription("Play or search for a song")
         .addStringOption(option =>
           option
             .setName("query")
-            .setDescription("Song name or URL")
+            .setDescription("Song name, YouTube URL, or other supported URL")
             .setRequired(true)
         )
     )
@@ -45,19 +43,19 @@ module.exports = {
     .addSubcommand(sub =>
       sub
         .setName("stop")
-        .setDescription("Stop music and leave voice")
+        .setDescription("Stop music and leave the voice channel")
     )
 
     .addSubcommand(sub =>
       sub
         .setName("queue")
-        .setDescription("Show the music queue")
+        .setDescription("Show the current music queue")
     )
 
     .addSubcommand(sub =>
       sub
         .setName("volume")
-        .setDescription("Change music volume")
+        .setDescription("Change the music volume")
         .addIntegerOption(option =>
           option
             .setName("amount")
@@ -74,7 +72,8 @@ module.exports = {
 
       if (!manager) {
         return interaction.reply({
-          content: "❌ Lavalink is not initialized.",
+          content:
+            "❌ Lavalink is not initialized. Check your Lavalink configuration.",
           ephemeral: true
         });
       }
@@ -82,13 +81,16 @@ module.exports = {
       if (!manager.useable) {
         return interaction.reply({
           content:
-            "❌ No Lavalink node is connected. Check LAVALINK_HOST, LAVALINK_PORT and LAVALINK_PASSWORD.",
+            "❌ No Lavalink node is connected.\n\nCheck:\n• LAVALINK_HOST\n• LAVALINK_PORT\n• LAVALINK_PASSWORD\n• LAVALINK_SECURE",
           ephemeral: true
         });
       }
 
       const subcommand = interaction.options.getSubcommand();
 
+      /*
+       * PLAY
+       */
       if (subcommand === "play") {
         const voiceChannel = interaction.member?.voice?.channel;
 
@@ -101,8 +103,13 @@ module.exports = {
 
         await interaction.deferReply();
 
+        const query = interaction.options.getString("query", true);
+
         let player = manager.getPlayer(interaction.guildId);
 
+        /*
+         * Create player if this guild doesn't have one.
+         */
         if (!player) {
           player = await manager.createPlayer({
             guildId: interaction.guildId,
@@ -112,157 +119,21 @@ module.exports = {
             selfMute: false,
             volume: 100
           });
-        } else if (player.voiceChannelId !== voiceChannel.id) {
-          await player.disconnect();
+        }
+
+        /*
+         * If the bot is in another voice channel,
+         * move the Lavalink player to the user's channel.
+         */
+        if (player.voiceChannelId !== voiceChannel.id) {
+          try {
+            await player.disconnect();
+          } catch (_) {}
+
           player.options.voiceChannelId = voiceChannel.id;
+
           await player.connect();
         }
 
-        if (!player.connected) {
-          await player.connect();
-        }
-
-        const query = interaction.options.getString("query");
-
-        const result = await player.search(
-          {
-            query
-          },
-          interaction.user
-        );
-
-        if (!result || !result.tracks || result.tracks.length === 0) {
-          return interaction.editReply(
-            "❌ I couldn't find that song."
-          );
-        }
-
-        const track = result.tracks[0];
-
-        await player.queue.add(track);
-
-        if (!player.playing) {
-          await player.play();
-        }
-
-        const title =
-          track.info?.title ||
-          track.info?.uri ||
-          "Unknown song";
-
-        const author =
-          track.info?.author ||
-          "Unknown artist";
-
-        const embed = new EmbedBuilder()
-          .setTitle("🎵 Added to queue")
-          .setDescription(`**${title}**`)
-          .addFields({
-            name: "Artist",
-            value: author,
-            inline: true
-          })
-          .setFooter({
-            text: `Requested by ${interaction.user.username}`
-          });
-
-        return interaction.editReply({
-          embeds: [embed]
-        });
-      }
-
-      const player = manager.getPlayer(interaction.guildId);
-
-      if (!player) {
-        return interaction.reply({
-          content: "❌ Nothing is playing.",
-          ephemeral: true
-        });
-      }
-
-      if (subcommand === "pause") {
-        await player.pause();
-
-        return interaction.reply("⏸️ Paused.");
-      }
-
-      if (subcommand === "resume") {
-        await player.resume();
-
-        return interaction.reply("▶️ Resumed.");
-      }
-
-      if (subcommand === "skip") {
-        await player.skip();
-
-        return interaction.reply("⏭️ Skipped.");
-      }
-
-      if (subcommand === "stop") {
-        await player.disconnect();
-
-        return interaction.reply("⏹️ Music stopped.");
-      }
-
-      if (subcommand === "volume") {
-        const amount = interaction.options.getInteger("amount");
-
-        await player.setVolume(amount);
-
-        return interaction.reply(
-          `🔊 Volume set to **${amount}%**.`
-        );
-      }
-
-      if (subcommand === "queue") {
-        const tracks = player.queue?.tracks || [];
-
-        if (!tracks.length) {
-          return interaction.reply("🎵 The queue is empty.");
-        }
-
-        const list = tracks
-          .slice(0, 10)
-          .map(
-            (track, index) =>
-              `**${index + 1}.** ${track.info?.title || "Unknown"}`
-          )
-          .join("\n");
-
-        return interaction.reply({
-          embeds: [
-            new EmbedBuilder()
-              .setTitle("🎵 Music Queue")
-              .setDescription(list)
-              .setFooter({
-                text:
-                  tracks.length > 10
-                    ? `Showing 10 of ${tracks.length} songs`
-                    : `${tracks.length} song(s)`
-              })
-          ]
-        });
-      }
-
-      return interaction.reply({
-        content: "❌ Unknown music command.",
-        ephemeral: true
-      });
-    } catch (error) {
-      console.error("Music command error:", error);
-
-      const message =
-        error?.message ||
-        "An unknown music error occurred.";
-
-      if (interaction.deferred || interaction.replied) {
-        return interaction.editReply(`❌ ${message}`);
-      }
-
-      return interaction.reply({
-        content: `❌ ${message}`,
-        ephemeral: true
-      });
-    }
-  }
-};
+        /*
+         * Make sure the player is
