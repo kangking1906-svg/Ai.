@@ -1,2 +1,44 @@
-const os=require('os');const config=require('../config');function createDashboard(app,client){app.get('/',(req,res)=>{if(!config.dashboardPublic&&req.headers['x-forwarded-for'])return res.status(403).send('Dashboard disabled.');res.type('html').send(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Discord Bot</title><style>body{font-family:system-ui;background:#111;color:#eee;margin:40px}main{max-width:700px;margin:auto}section{padding:18px;border:1px solid #333;border-radius:14px;margin:12px 0}</style></head><body><main><h1>All-in-One Discord AI Bot</h1><section>Online: <b>${client.isReady()}</b></section><section>Guilds: <b>${client.guilds.cache.size}</b></section><section>Uptime: <b>${Math.floor(process.uptime())}s</b></section><section>Memory: <b>${Math.round(process.memoryUsage().rss/1024/1024)} MB RSS</b></section><section>AI: <b>${config.ai.provider}</b> · TTS: <b>${config.tts.provider}</b></section><small>Host memory: ${Math.round(os.totalmem()/1024/1024)} MB</small></main></body></html>`)});}
-module.exports={createDashboard};
+const os = require('os');
+const config = require('../config');
+const { logger } = require('./logger');
+
+function createDashboard(app, client) {
+  app.get('/dashboard', (req, res) => {
+    if (!config.dashboardPublic && req.headers['x-forwarded-for']) {
+      return res.status(403).json({ error: 'Dashboard is private' });
+    }
+
+    try {
+      const stats = {
+        bot: {
+          name: client.user.username,
+          id: client.user.id,
+          tag: client.user.tag,
+          uptime: process.uptime(),
+          version: require('../package.json').version
+        },
+        discord: {
+          guilds: client.guilds.cache.size,
+          users: client.users.cache.size,
+          channels: client.channels.cache.size
+        },
+        system: {
+          platform: os.platform(),
+          memory: {
+            used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+            total: Math.round(os.totalmem() / 1024 / 1024)
+          },
+          cpu: os.cpus().length
+        },
+        timestamp: new Date().toISOString()
+      };
+
+      return res.status(200).json(stats);
+    } catch (error) {
+      logger.error('Dashboard error', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+}
+
+module.exports = { createDashboard };
