@@ -262,17 +262,6 @@ function validateStartup() {
       `Unsupported TTS_PROVIDER: ${config.tts.provider}`
     );
   }
-}
-
-module.exports = {
-  ...config,
-  validateStartup
-};
-  if (!allowedTTS.includes(config.tts.provider)) {
-    throw new Error(
-      `Unsupported TTS_PROVIDER: ${config.tts.provider}`
-    );
-  }
 
   if (config.ai.contextMessages < 0) {
     throw new Error("AI_CONTEXT_MESSAGES must be >= 0.");
